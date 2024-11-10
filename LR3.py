@@ -1,14 +1,18 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
-alphabet: str = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ ,.!?*+=—-\"`\n"
+alphabet: str = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ ,.!?*+=—-1234567890;:'	()\"`\n"
 
 # Функция шифрования текста
 def encode(text: str, a: int = 1, b: int = 1, c: int = 1) -> str:
     decode: str = ""
     for position, symbol in enumerate(text):
         k: int = (a * position**2) + (b * position) + c
-        index: int = (alphabet.index(symbol.upper()) - k) % len(alphabet)
+        try:
+            index: int = (alphabet.index(symbol.upper()) - k) % len(alphabet)
+        except Exception:
+            print(f'Не найден символ: "{symbol}"')
+            return
         decode += alphabet[index] if symbol.isupper() else alphabet[index].lower()
     return decode
 
@@ -30,6 +34,16 @@ def encrypt_text():
         encrypted_msg = encode(message)
         text_output.delete("1.0", tk.END)
         text_output.insert(tk.END, str(encrypted_msg))
+    else:
+        messagebox.showwarning("Ошибка", "Поле ввода пусто!")
+
+def encrypt_to_file():
+    message = text_input.get("1.0", tk.END).strip()
+    if message:
+        encrypted_msg = encode(message)
+        with open('encoded_text.txt', 'w', encoding='utf-8') as file:
+            file.write(encrypted_msg)
+        messagebox.showinfo("Успешно", 'Успешная запись в файл "encoded_text.txt"')
     else:
         messagebox.showwarning("Ошибка", "Поле ввода пусто!")
 
@@ -91,6 +105,8 @@ create_context_menu(text_input)  # Добавление контекстного
 # Кнопки шифрования и дешифрования
 encrypt_button = tk.Button(root, text="Зашифровать", command=encrypt_text)
 encrypt_button.pack(pady=5)
+encrypt_to_file_button = tk.Button(root, text='Зашифровать в файл', command=encrypt_to_file)
+encrypt_to_file_button.pack(pady=5)
 
 decrypt_button = tk.Button(root, text="Расшифровать", command=decrypt_text)
 decrypt_button.pack(pady=5)
