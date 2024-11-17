@@ -1,21 +1,62 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import *
+from tkinter import filedialog, messagebox, ttk
 
 alphabet: str = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ ,.!?*+=—-1234567890;:'	()\"`\n"
 
-def getCipher(origin_key, origin_text):
-    clear_text = ''.join(origin_text.split(' ')).lower()
-    k = len(clear_text) // len(origin_key)
 
-    cipher = {}
-    for index, ch in enumerate(origin_key.lower()):
-        if ch in cipher:
-            cipher[ch] += clear_text[index * k : index * k + k]
-        else:
-            cipher[ch] = clear_text[index * k : index * k + k]
+def encode_cipher(text, key=2):
+    """
+    Кодирование текста методом одиночной перестановки.
 
-    cipher_text = ''.join([''.join([cipher[key][index] for key in sorted(cipher.keys())]) for index in range(k)])
-    return ' '.join([cipher_text[index : index + k] for index in range(0, len(cipher_text), k)]).upper()
+    Args:
+        text (str): Исходный текст для шифрования
+        key (int): Ключ (длина блока) для перестановки
+
+    Returns:
+        str: Зашифрованный текст
+    """
+    # Дополняем текст пробелами, если его длина не кратна ключу
+    while len(text) % key != 0:
+        text += " "
+
+    # Разбиваем текст на блоки длиной key
+    blocks = [text[i:i + key] for i in range(0, len(text), key)]
+
+    # Выполняем перестановку в каждом блоке
+    encoded_blocks = []
+    for block in blocks:
+        # Переворачиваем порядок символов в блоке
+        encoded_block = block[::-1]
+        encoded_blocks.append(encoded_block)
+
+    # Объединяем зашифрованные блоки в одну строку
+    return "".join(encoded_blocks)
+
+
+def decode_cipher(encoded_text, key=2):
+    """
+    Декодирование текста, зашифрованного методом одиночной перестановки.
+
+    Args:
+        encoded_text (str): Зашифрованный текст
+        key (int): Ключ (длина блока) для перестановки
+
+    Returns:
+        str: Расшифрованный текст
+    """
+    # Разбиваем текст на блоки длиной key
+    blocks = [encoded_text[i:i + key] for i in range(0, len(encoded_text), key)]
+
+    # Выполняем обратную перестановку в каждом блоке
+    decoded_blocks = []
+    for block in blocks:
+        # Переворачиваем порядок символов в блоке обратно
+        decoded_block = block[::-1]
+        decoded_blocks.append(decoded_block)
+
+    # Объединяем расшифрованные блоки и удаляем лишние пробелы справа
+    return "".join(decoded_blocks).rstrip()
 
 
 # Функция шифрования текста
@@ -46,7 +87,10 @@ def decode(text: str, a: int = 1, b: int = 1, c: int = 1) -> str:
 def encrypt_text():
     message = text_input.get("1.0", tk.END).strip()
     if message:
-        encrypted_msg = encode(message)
+        if method.get() == trisemus:
+            encrypted_msg = encode(message)
+        else:
+            encrypted_msg = encode_cipher(message)
         text_output.delete("1.0", tk.END)
         text_output.insert(tk.END, str(encrypted_msg))
     else:
@@ -55,7 +99,10 @@ def encrypt_text():
 def encrypt_to_file():
     message = text_input.get("1.0", tk.END).strip()
     if message:
-        encrypted_msg = encode(message)
+        if method.get() == trisemus:
+            encrypted_msg = encode(message)
+        else:
+            encrypted_msg = encode_cipher(message)
         with open('encoded_text.txt', 'w', encoding='utf-8') as file:
             file.write(encrypted_msg)
         messagebox.showinfo("Успешно", 'Успешная запись в файл "encoded_text.txt"')
@@ -68,7 +115,10 @@ def decrypt_text():
     encrypted_message = text_output.get("1.0", tk.END).strip()
     if encrypted_message:
         try:
-            decrypted_msg = decode(encrypted_message)
+            if method.get() == trisemus:
+                decrypted_msg = decode(encrypted_message)
+            else:
+                decrypted_msg = decode_cipher(encrypted_message)
             decrypted_output.delete("1.0", tk.END)
             decrypted_output.insert(tk.END, decrypted_msg)
         except:
@@ -98,8 +148,20 @@ def create_context_menu(widget):
 
 # Создание окна интерфейса
 root = tk.Tk()
-root.title("Шифрование и Дешифрование методом Трисемуса")
+root.title("Шифрование и Дешифрование методом Трисемуса|Одиночной перестановки")
 root['bg'] = '#3c85fa'
+
+# Радиокнопки
+trisemus = 'Метод Трисемуса'
+cipher = 'Метод одиночной перестановки'
+
+method = StringVar(value=trisemus)
+
+trisemus_btn = ttk.Radiobutton(text=trisemus, value=trisemus, variable=method)
+trisemus_btn.pack()
+
+cipher_btn = ttk.Radiobutton(text=cipher, value=cipher, variable=method)
+cipher_btn.pack()
 
 # Поле для ввода текста
 text_input_label = tk.Label(root, text="Введите текст для шифрования:")
